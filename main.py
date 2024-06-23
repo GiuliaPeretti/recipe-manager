@@ -37,23 +37,34 @@ def display_recipe(f1,f2,f3):
         r=r+"\nRecipe: \n"+recipe['recipe']
         return(recipe['img'], r)
     else:
-        return("Images\Not_found.png","")
+        return("Images/Not_found.png","")
 
 def get_recipes():
     recipes=open('recipes.json', 'r').read()
     recipes=ast.literal_eval(recipes)
     return(recipes)
 
-def add_recipe(img, name, ingredients, recipe):
+def add_recipe(img, name, ingredients, recipe, f1_add, f2_add, f3_add):
     img=Image.open(img)
-    path="Images/"+name+".webp"
+    w, h = img.size 
+    print(w)
+    print(h)
+    print(h*(600/w))
+    img = img.resize( (600, (int(h*(600/w))) ) )
+    n=name.replace(" ","_")
+    path="Images/"+n+".jpg"
     img.save(path)
     print("add recipe")
     recipes=get_recipes()
     i=ingredients.split('\n')
-    recipes.append({"name":name, "ingredients":i, "img":path})
+    filters=f1_add+f2_add+f3_add
+    recipes.append({"name":name, "ingredients":i, "recipe":recipe, "img":path, "filters": filters})
     recipes=str(recipes)
     recipes=recipes.replace("'",'"')
+    for i in range (1,len(recipes)-1):
+        if(recipes[i]=='"' and recipes[i-1].isalpha() and recipes[i+1].isalpha()):
+            recipes=recipes[:i]+"'"+recipes[i+1:]
+    
     with open('recipes.json', 'w') as f:
         f.write(str(recipes))
     return("added")
@@ -76,6 +87,9 @@ with gr.Blocks() as demo:
         img=gr.Image(type="filepath", label="Result: ")
         ricetta=gr.TextArea(label="Recipe: ")
     b_add_recipe=gr.Button("Add recipe")
+    f1_add=gr.CheckboxGroup(["Sweet", "Savory"], label="")
+    f2_add=gr.CheckboxGroup(["Breakfast", "Lunch", "Dinner"], label="")
+    f3_add=gr.CheckboxGroup(["First Course", "Main course", "Second course","Side", "Desserts","Drinks"], label="")
     with gr.Row():
         img_add=gr.Image(type="filepath", label="Result:")
         name_add=gr.TextArea(label="Name: ")
@@ -85,7 +99,7 @@ with gr.Blocks() as demo:
         out_add=gr.TextArea()
 
     b_random_recipe.click(fn=display_recipe, inputs=[f1,f2,f3], outputs=[img,ricetta])
-    b_add_recipe.click(fn=add_recipe,inputs=[img_add, name_add, ingridients_add, recipe_add],outputs=out_add)
+    b_add_recipe.click(fn=add_recipe,inputs=[img_add, name_add, ingridients_add, recipe_add, f1_add, f2_add, f3_add],outputs=out_add)
     # f1_check.change(fn=update_filters,inputs=[f1_check],outputs=[])
 
 
