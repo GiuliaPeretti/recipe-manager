@@ -37,7 +37,7 @@ def display_recipe(f1,f2,f3):
         r=r+"\nRecipe: \n"+recipe['recipe']
         return(recipe['img'], r)
     else:
-        return("Images/Not_found.png","")
+        return("Images/Not_found.png","No recipe found")
 
 def get_recipes():
     recipes=open('recipes.json', 'r').read()
@@ -45,6 +45,7 @@ def get_recipes():
     return(recipes)
 
 def add_recipe(img, name, ingredients, recipe, f1_add, f2_add, f3_add):
+    print(f1_add)
     img=Image.open(img)
     w, h = img.size 
     print(w)
@@ -67,17 +68,41 @@ def add_recipe(img, name, ingredients, recipe, f1_add, f2_add, f3_add):
     
     with open('recipes.json', 'w') as f:
         f.write(str(recipes))
-    return("added")
+    return("Done")
 
 def update_filters(check):
     print(check)
     pass
+
+def remove(name):
+    recipes=get_recipes()
+    pos=-1
+    for i in range(len(recipes)):
+        if(recipes[i]['name']==name):
+            pos=i
+            break
+    if (pos!=-1):
+        recipes.pop(pos)
+        recipes=str(recipes)
+        recipes=recipes.replace("'",'"')
+        for i in range (1,len(recipes)-1):
+            if(recipes[i]=='"' and recipes[i-1].isalpha() and recipes[i+1].isalpha()):
+                recipes=recipes[:i]+"'"+recipes[i+1:]
+        with open('recipes.json', 'w') as f:
+            f.write(str(recipes))
+        return("Done")
+    else:
+        return("Not found")
+        
+
+
 
 
 
 
 with gr.Blocks() as demo:
     gr.Markdown("# Recipe Manager")
+    gr.Markdown('## Find a recipe: ')
     f1=gr.CheckboxGroup(["Sweet", "Savory"], label="")
     f2=gr.CheckboxGroup(["Breakfast", "Lunch", "Dinner"], label="")
     f3=gr.CheckboxGroup(["First Course", "Main course", "Second course","Side", "Desserts","Drinks"], label="")
@@ -86,7 +111,8 @@ with gr.Blocks() as demo:
     with gr.Row():
         img=gr.Image(type="filepath", label="Result: ")
         ricetta=gr.TextArea(label="Recipe: ")
-    b_add_recipe=gr.Button("Add recipe")
+
+    gr.Markdown('## Add new recipe: ')        
     f1_add=gr.CheckboxGroup(["Sweet", "Savory"], label="")
     f2_add=gr.CheckboxGroup(["Breakfast", "Lunch", "Dinner"], label="")
     f3_add=gr.CheckboxGroup(["First Course", "Main course", "Second course","Side", "Desserts","Drinks"], label="")
@@ -96,12 +122,19 @@ with gr.Blocks() as demo:
         ingridients_add=gr.TextArea(label="Ingredients: ")
         #value="write in the format:\nIngredientd1\nIngredientd2\n...",
         recipe_add=gr.TextArea(label="Recipe: ")
-        out_add=gr.TextArea()
+    out_add=gr.Textbox(label="Result: ") 
+    b_add_recipe=gr.Button("Add recipe")
+
+    gr.Markdown("## Remove recipe")
+    recipe_remove=gr.Textbox(label="Name: ")
+    out_remove=gr.Textbox(label="Result: ")
+    b_remove=gr.Button("Remove")
+    
+
 
     b_random_recipe.click(fn=display_recipe, inputs=[f1,f2,f3], outputs=[img,ricetta])
-    b_add_recipe.click(fn=add_recipe,inputs=[img_add, name_add, ingridients_add, recipe_add, f1_add, f2_add, f3_add],outputs=out_add)
-    # f1_check.change(fn=update_filters,inputs=[f1_check],outputs=[])
-
+    b_add_recipe.click(fn=add_recipe, inputs=[img_add, name_add, ingridients_add, recipe_add, f1_add, f2_add, f3_add], outputs=[out_add])
+    b_remove.click(fn=remove, inputs=[recipe_remove], outputs=[out_remove])
 
 
 demo.launch(share=False)
